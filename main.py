@@ -1,6 +1,7 @@
 from flask import Flask, request, Response
 from pyrogram import Client
 import os
+import asyncio
 
 app = Flask(__name__)
 
@@ -20,13 +21,17 @@ def stream_video():
     if not file_id:
         return "No file ID provided", 400
 
+    async def fetch_video():
+        await client.start()
+        msg = await client.get_messages(-1002734341593, int(file_id))
+        return client.stream_media(msg)
+
     def generate():
-        with client:
-            msg = client.get_messages("-1002734341593", int(file_id))
-            for chunk in client.download_media(msg, in_memory=True):
-                yield chunk
+        stream = asyncio.run(fetch_video())
+        for chunk in stream:
+            yield chunk
 
     return Response(generate(), mimetype="video/mp4")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=5000) 
