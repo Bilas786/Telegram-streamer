@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 API_ID = int(os.environ.get("API_ID"))
 API_HASH = os.environ.get("API_HASH")
-SESSION_STRING = os.environ.get("SESSION_STRING")  # Your user session
+SESSION_STRING = os.environ.get("SESSION_STRING")
 
 client = Client("streamer", api_id=API_ID, api_hash=API_HASH, session_string=SESSION_STRING)
 
@@ -20,10 +20,10 @@ def stream_video():
     if not file_id:
         return "No file ID provided", 400
 
-    async def generate():
-        async with client:
-            msg = await client.get_messages("-1002734341593", int(file_id))
-            async for chunk in client.download_media(msg, in_memory=True):
+    def generate():
+        with client:
+            msg = client.get_messages("-1002734341593", int(file_id))
+            for chunk in client.download_media(msg, in_memory=True):
                 yield chunk
 
     return Response(generate(), mimetype="video/mp4")
